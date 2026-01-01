@@ -1,25 +1,4 @@
 
 {
-  "name": "Kassensystem FZ",
-  "short_name": "FZ Kasse",
-  "description": "Mobiles Kassensystem für Events - Powered by C2",
-  "start_url": "./index.html",
-  "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#f59e0b",
-  "orientation": "portrait",
-  "icons": [
-    {
-      "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxOTIiIGhlaWdodD0iMTkyIiB2aWV3Qm94PSIwIDAgNTEyIDUxMiI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJnIiB4MT0iMCUiIHkxPSIwJSIgeDI9IjEwMCUiIHkyPSIxMDAlIj48c3RvcCBvZmZzZXQ9IjAlIiBzdHlsZT0ic3RvcC1jb2xvcjojZjU5ZTBiIi8+PHN0b3Agb2Zmc2V0PSIxMDAlIiBzdHlsZT0ic3RvcC1jb2xvcjojZmJiZjI0Ii8+PC9saW5lYXJHcmFkaWVudD48L2RlZnM+PHJlY3Qgd2lkdGg9IjUxMiIgaGVpZ2h0PSI1MTIiIHJ4PSIxMDAiIGZpbGw9InVybCgjZykiLz48cGF0aCBkPSJNMTI4IDM1MmgyNTZ2NjRIMTI4ek0xNjAgMjI0aDE5MmwtMzItOTZIMTkybC0zMiA5NnoiIGZpbGw9IndoaXRlIi8+PHJlY3QgeD0iMTYwIiB5PSIyNDAiIHdpZHRoPSIxOTIiIGhlaWdodD0iOTYiIHJ4PSI4IiBmaWxsPSJ3aGl0ZSIvPjxjaXJjbGUgY3g9IjIwMCIgY3k9IjI3MCIgcj0iMTAiIGZpbGw9IiNmNTllMGIiLz48Y2lyY2xlIGN4PSIyNTYiIGN5PSIyNzAiIHI9IjEwIiBmaWxsPSIjZjU5ZTBiIi8+PGNpcmNsZSBjeD0iMzEyIiBjeT0iMjcwIiByPSIxMCIgZmlsbD0iI2Y1OWUwYiIvPjwvc3ZnPg==",
-      "sizes": "192x192",
-      "type": "image/svg+xml",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1MTIiIGhlaWdodD0iNTEyIiB2aWV3Qm94PSIwIDAgNTEyIDUxMiI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJnIiB4MT0iMCUiIHkxPSIwJSIgeDI9IjEwMCUiIHkyPSIxMDAlIj48c3RvcCBvZmZzZXQ9IjAlIiBzdHlsZT0ic3RvcC1jb2xvcjojZjU5ZTBiIi8+PHN0b3Agb2Zmc2V0PSIxMDAlIiBzdHlsZT0ic3RvcC1jb2xvcjojZmJiZjI0Ii8+PC9saW5lYXJHcmFkaWVudD48L2RlZnM+PHJlY3Qgd2lkdGg9IjUxMiIgaGVpZ2h0PSI1MTIiIHJ4PSIxMDAiIGZpbGw9InVybCgjZykiLz48cGF0aCBkPSJNMTI4IDM1MmgyNTZ2NjRIMTI4ek0xNjAgMjI0aDE5MmwtMzItOTZIMTkybC0zMiA5NnoiIGZpbGw9IndoaXRlIi8+PHJlY3QgeD0iMTYwIiB5PSIyNDAiIHdpZHRoPSIxOTIiIGhlaWdodD0iOTYiIHJ4PSI4IiBmaWxsPSJ3aGl0ZSIvPjxjaXJjbGUgY3g9IjIwMCIgY3k9IjI3MCIgcj0iMTAiIGZpbGw9IiNmNTllMGIiLz48Y2lyY2xlIGN4PSIyNTYiIGN5PSIyNzAiIHI9IjEwIiBmaWxsPSIjZjU5ZTBiIi8+PGNpcmNsZSBjeD0iMzEyIiBjeT0iMjcwIiByPSIxMCIgZmlsbD0iI2Y1OWUwYiIvPjwvc3ZnPg==",
-      "sizes": "512x512",
-      "type": "image/svg+xml",
-      "purpose": "any maskable"
-    }
-  ]
+  "obsolete": "Diese Datei wird nicht mehr benötigt. Das PWA-Manifest wird jetzt automatisch von vite-plugin-pwa generiert."
 }
