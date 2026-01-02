@@ -2,179 +2,147 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { storage } from '../../services/storage';
-import { ArchivedEvent } from '../../types';
-import { ArrowLeft, Printer } from 'lucide-react';
+import { ArchivedEvent, Order, Product, InventoryItem } from '../../types';
+import { ArrowLeft, Printer, Info, Package, Boxes, RotateCcw, Coins } from 'lucide-react';
 
 const POSPrintView: React.FC = () => {
   const { id } = useParams<{id: string}>();
   const navigate = useNavigate();
   const [event, setEvent] = useState<ArchivedEvent | null>(null);
+  const products = storage.getProducts();
 
   useEffect(() => {
     const archive = storage.getArchive();
     const found = archive.find(e => e.id === id);
-    if (found) {
-      setEvent(found);
-    }
+    if (found) setEvent(found);
   }, [id]);
 
   if (!event) return <div className="p-10 text-center font-bold">Event nicht gefunden.</div>;
 
-  const stats = event.orders.reduce((acc, o) => {
+  const calculateVAT = (orders: Order[]) => {
+    const result = { togo: { gross: 0, net: 0, vat: 0 }, onsite: { gross: 0, net: 0, vat: 0 }, totalGross: 0 };
+    orders.filter(o => !o.cancelled).forEach(o => {
+      if (o.paymentMethod === 'Gratis') return;
+      const gross = o.total;
+      result.totalGross += gross;
+      if (o.tax_rate === 7) {
+        result.togo.gross += gross; result.togo.net += gross / 1.07; result.togo.vat += gross - (gross / 1.07);
+      } else {
+        result.onsite.gross += gross; result.onsite.net += gross / 1.19; result.onsite.vat += gross - (gross / 1.19);
+      }
+    });
+    return result;
+  };
+
+  const vatStats = calculateVAT(event.orders);
+  const cancelledOrders = event.orders.filter(o => o.cancelled);
+  
+  const stats = event.orders.reduce<{ bar: number; karte: number; gratis: number }>((acc, o) => {
+    if (o.cancelled) return acc;
     if (o.paymentMethod === 'Bar') acc.bar += o.total;
     if (o.paymentMethod === 'Karte') acc.karte += o.total;
     if (o.paymentMethod === 'Gratis') {
-      acc.gratis += o.items.reduce((sum, i) => sum + (i.price * i.quantity), 0);
+      acc.gratis += o.items.reduce((sum: number, i) => sum + (i.price * i.quantity), 0);
     }
     return acc;
   }, { bar: 0, karte: 0, gratis: 0 });
 
-  const productSummary = event.orders.reduce((acc: Record<string, number>, o) => {
-    o.items.forEach(item => {
-      acc[item.name] = (acc[item.name] || 0) + item.quantity;
-    });
-    return acc;
-  }, {});
-
-  const revenue = stats.bar + stats.karte;
-  const expectedEndBalance = event.initialBalance + stats.bar;
+  const totalTips = event.tips?.reduce((sum, t) => sum + t.amount, 0) || 0;
+  const tipCount = event.tips?.length || 0;
 
   return (
     <div className="bg-white min-h-screen text-slate-900 font-sans print:p-0">
       <div className="max-w-4xl mx-auto p-6 flex justify-between items-center border-b print:hidden">
-        <button 
-          onClick={() => navigate(-1)} 
-          className="flex items-center gap-2 bg-slate-100 px-5 py-3 rounded-2xl font-black text-[10px] uppercase italic tracking-widest active:scale-95 transition-all text-slate-700"
-        >
-          <ArrowLeft size={16} /> Zurück zur App
-        </button>
-        <button 
-          onClick={() => window.print()} 
-          className="flex items-center gap-2 bg-slate-900 text-white px-5 py-3 rounded-2xl font-black text-[10px] uppercase italic tracking-widest active:scale-95 transition-all shadow-xl"
-        >
-          <Printer size={16} /> Jetzt Drucken
-        </button>
+        <button onClick={() => navigate(-1)} className="flex items-center gap-2 bg-slate-100 px-5 py-3 rounded-2xl font-black text-[10px] uppercase italic tracking-widest text-slate-700"><ArrowLeft size={16} /> Zurück</button>
+        <button onClick={() => window.print()} className="flex items-center gap-2 bg-slate-900 text-white px-5 py-3 rounded-2xl font-black text-[10px] uppercase italic tracking-widest shadow-xl"><Printer size={16} /> Drucken</button>
       </div>
 
-      <div className="max-w-4xl mx-auto p-10 print:p-0" id="print-area">
+      <div className="max-w-4xl mx-auto p-10 print:p-0">
         <header className="border-b-4 border-slate-900 pb-8 mb-10 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
-          <div>
-            <h1 className="text-5xl font-black italic uppercase tracking-tighter mb-2 leading-none">Abschluss-Bericht</h1>
-            <p className="text-2xl font-black text-slate-500 uppercase italic tracking-tight">{event.name}</p>
-          </div>
-          <div className="text-left md:text-right">
-            <p className="font-black italic text-lg">{new Date(event.startDate).toLocaleDateString('de-DE')}</p>
-            <p className="font-bold text-slate-400 text-sm uppercase tracking-widest">
-              {new Date(event.startDate).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })} - {new Date(event.endDate).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}
-            </p>
-          </div>
+          <div><h1 className="text-5xl font-black italic uppercase tracking-tighter leading-none">Bericht</h1><p className="text-2xl font-black text-slate-500 uppercase italic tracking-tight">{event.name}</p></div>
+          <div className="text-right"><p className="font-black italic text-lg">{new Date(event.startDate).toLocaleDateString('de-DE')}</p><p className="font-bold text-slate-400 text-sm">ID: {event.id}</p></div>
         </header>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10 mb-12">
-          <div className="bg-slate-50 p-8 rounded-[2rem] border-2 border-slate-200">
-            <h2 className="text-xs font-black uppercase tracking-[0.2em] italic text-slate-500 mb-6 border-b-2 border-slate-200 pb-2">Umsatz-Check</h2>
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <span className="font-bold text-slate-600">Bargeld</span>
-                <span className="font-black text-xl italic text-slate-900">{stats.bar.toFixed(2)} €</span>
+        <div className="grid grid-cols-2 gap-10 mb-12">
+           <div className="bg-slate-50 p-8 rounded-[2rem] border-2 border-slate-200">
+              <h2 className="text-xs font-black uppercase tracking-widest italic text-slate-500 mb-6 border-b pb-2">Zahlungen</h2>
+              <div className="space-y-4">
+                <div className="flex justify-between font-bold"><span>Bar</span><span>{stats.bar.toFixed(2).replace('.', ',')} €</span></div>
+                <div className="flex justify-between font-bold"><span>Karte</span><span>{stats.karte.toFixed(2).replace('.', ',')} €</span></div>
+                <div className="pt-4 border-t-2 border-slate-200 flex justify-between font-black text-2xl italic text-emerald-700"><span>UMSATZ</span><span>{vatStats.totalGross.toFixed(2).replace('.', ',')} €</span></div>
               </div>
-              <div className="flex justify-between items-center">
-                <span className="font-bold text-slate-600">Kartenzahlung</span>
-                <span className="font-black text-xl italic text-slate-900">{stats.karte.toFixed(2)} €</span>
+           </div>
+           <div className="bg-slate-900 p-8 rounded-[2rem] text-white">
+              <h2 className="text-xs font-black uppercase tracking-widest italic text-slate-400 mb-6 border-b border-white/10 pb-2">Kassen-Check</h2>
+              <div className="space-y-4">
+                <div className="flex justify-between"><span>Start</span><span>{event.initialBalance.toFixed(2).replace('.', ',')} €</span></div>
+                <div className="flex justify-between"><span>Bar (+)</span><span>{stats.bar.toFixed(2).replace('.', ',')} €</span></div>
+                <div className="pt-6 border-t border-white/20 flex justify-between font-black text-3xl italic text-amber-500"><span>SOLL</span><span>{(event.initialBalance + stats.bar).toFixed(2).replace('.', ',')} €</span></div>
               </div>
-              <div className="pt-4 border-t-2 border-slate-200 flex justify-between items-center">
-                <span className="font-black text-slate-800 italic uppercase">Gesamtumsatz</span>
-                <span className="font-black text-3xl italic text-emerald-700">{revenue.toFixed(2)} €</span>
-              </div>
-              <p className="text-[10px] font-bold text-slate-400 italic text-right mt-2">* Exklusive Gratis-Buchungen ({stats.gratis.toFixed(2)} €)</p>
-            </div>
-          </div>
-
-          <div className="bg-slate-900 p-8 rounded-[2rem] text-white">
-            <h2 className="text-xs font-black uppercase tracking-[0.2em] italic text-slate-400 mb-6 border-b border-white/20 pb-2">Kassen-Rechnung</h2>
-            <div className="space-y-4">
-              <div className="flex justify-between items-center text-slate-300">
-                <span className="font-bold">Anfangsbestand</span>
-                <span className="font-bold">{event.initialBalance.toFixed(2)} €</span>
-              </div>
-              <div className="flex justify-between items-center text-slate-300">
-                <span className="font-bold">Bar-Umsatz (+)</span>
-                <span className="font-bold">{stats.bar.toFixed(2)} €</span>
-              </div>
-              <div className="pt-6 border-t border-white/20 flex justify-between items-center">
-                <span className="font-black italic uppercase text-amber-500">Soll-Endbestand</span>
-                <span className="font-black text-4xl italic text-white">{expectedEndBalance.toFixed(2)} €</span>
-              </div>
-              <p className="text-[10px] text-slate-400 italic mt-4 leading-relaxed">Der physische Kassenbestand muss diesem Wert entsprechen.</p>
-            </div>
-          </div>
+           </div>
         </div>
 
-        <section className="mb-12">
-          <h2 className="text-xl font-black italic uppercase tracking-tight mb-6 flex items-center gap-4">
-            <span className="bg-slate-900 text-white px-4 py-1 rounded-lg">Mengen</span> Verkaufte Produkte
-          </h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-            {Object.entries(productSummary).sort((a,b) => b[1] - a[1]).map(([name, count]) => (
-              <div key={name} className="border-2 border-slate-100 p-4 rounded-2xl flex justify-between items-center bg-white">
-                <span className="font-bold text-slate-800">{name}</span>
-                <span className="bg-slate-100 px-3 py-1 rounded-xl font-black italic text-lg text-slate-900 border border-slate-200">{count}x</span>
-              </div>
-            ))}
+        <section className="mb-12 bg-amber-50 p-8 rounded-[2rem] border-2 border-amber-100">
+          <h2 className="text-xl font-black italic uppercase mb-6 flex items-center gap-3 text-amber-700"><Coins size={24}/> Trinkgeld</h2>
+          <div className="grid grid-cols-2 gap-8">
+            <div>
+              <p className="text-[10px] font-black uppercase text-amber-600 italic">Gesamtsumme Trinkgeld</p>
+              <p className="text-4xl font-black text-slate-900 italic mt-1">{totalTips.toFixed(2).replace('.', ',')} €</p>
+            </div>
+            <div>
+              <p className="text-[10px] font-black uppercase text-amber-600 italic">Anzahl Buchungen</p>
+              <p className="text-4xl font-black text-slate-900 italic mt-1">{tipCount} Buchungen</p>
+            </div>
           </div>
         </section>
 
-        <section className="mb-12 overflow-x-auto">
-          <h2 className="text-xl font-black italic uppercase tracking-tight mb-6 border-b-4 border-slate-900 pb-2">Detaillierte Buchungsliste</h2>
-          <table className="w-full text-sm min-w-[600px]">
-            <thead>
-              <tr className="text-left font-black text-slate-500 uppercase tracking-widest text-[10px] border-b-2">
-                <th className="py-4 px-2">Bon #</th>
-                <th className="py-4 px-2">Zeit</th>
-                <th className="py-4 px-2">Zahlart</th>
-                <th className="py-4 px-2">Positionen</th>
-                <th className="py-4 px-2 text-right">Summe</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {event.orders.map(o => (
-                <tr key={o.id}>
-                  <td className="py-4 px-2 font-black italic text-slate-900">#{o.orderNumber}</td>
-                  <td className="py-4 px-2 font-bold text-slate-500">{new Date(o.timestamp).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}</td>
-                  <td className="py-4 px-2">
-                    <span className="px-3 py-1 rounded text-[9px] font-black uppercase italic tracking-widest border-2 border-slate-900 text-slate-900 bg-white">
-                      {o.paymentMethod}
-                    </span>
-                  </td>
-                  <td className="py-4 px-2 text-xs font-bold text-slate-700">
-                    {o.items.map(i => `${i.quantity}x ${i.name}`).join(', ')}
-                  </td>
-                  <td className="py-4 px-2 text-right font-black italic text-lg text-slate-900">{o.total.toFixed(2)} €</td>
-                </tr>
+        {event.inventory && (
+          <section className="mb-12 bg-slate-50 p-8 rounded-[2rem] border-2 border-slate-100">
+            <h2 className="text-xl font-black italic uppercase mb-6 flex items-center gap-3"><Boxes size={24}/> Bestandsverlauf</h2>
+            <table className="w-full text-left text-[10px] font-black uppercase italic">
+              <thead><tr className="border-b-2 border-slate-200"><th className="py-2">Produkt</th><th className="py-2 text-center">Start</th><th className="py-2 text-center">Verkauft</th><th className="py-2 text-center">Aufgestockt</th><th className="py-2 text-center">Rest</th></tr></thead>
+              <tbody className="divide-y divide-slate-100">
+                {Object.entries(event.inventory).map(([id, invValue]) => {
+                  const inv = invValue as InventoryItem;
+                  const p = products.find(x => x.id === id);
+                  const sold = event.orders.filter(o => !o.cancelled).reduce((sum, o) => sum + (o.items.find(i => i.productId === id)?.quantity || 0), 0);
+                  const refills = event.refills?.reduce((sum, r) => sum + (r.items[id] || 0), 0) || 0;
+                  return (
+                    <tr key={id}>
+                      <td className="py-3">{p?.name || id}</td>
+                      <td className="py-3 text-center">{inv.start - refills}</td>
+                      <td className="py-3 text-center">{sold}</td>
+                      <td className="py-3 text-center">{refills}</td>
+                      <td className="py-3 text-center font-black text-emerald-700">{inv.current}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </section>
+        )}
+
+        {cancelledOrders.length > 0 && (
+          <section className="mb-12">
+            <h2 className="text-xl font-black italic uppercase text-red-600 mb-6 border-b-4 border-red-500 pb-2 flex items-center gap-3"><RotateCcw size={24}/> Stornierungen</h2>
+            <div className="space-y-3">
+              {cancelledOrders.map(o => (
+                <div key={o.id} className="p-4 border-2 border-red-100 rounded-2xl flex justify-between items-center text-xs font-bold italic">
+                  <div>
+                    <span className="text-slate-900 font-black">#{o.orderNumber}</span> - {o.total.toFixed(2).replace('.', ',')} €
+                    <p className="text-[10px] text-red-500 uppercase mt-1">Grund: {o.cancel_reason} • {new Date(o.cancel_timestamp || '').toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'})} Uhr</p>
+                  </div>
+                  <div className="text-slate-400 text-[10px]">{o.items.map(i => `${i.quantity}x ${i.name}`).join(', ')}</div>
+                </div>
               ))}
-            </tbody>
-          </table>
-        </section>
+            </div>
+          </section>
+        )}
 
-        <footer className="mt-20 pt-8 border-t-2 border-slate-100 flex flex-col md:flex-row justify-between items-center text-[10px] font-bold text-slate-400 uppercase tracking-widest italic gap-4">
-          <div className="flex flex-col items-center md:items-start">
-            <span>Kassensystem FZ Archiv-System</span>
-            <span className="text-amber-500 lowercase">powered by C2</span>
-          </div>
-          <span>Event-ID: {event.id}</span>
-          <span>Gedruckt am: {new Date().toLocaleString('de-DE')}</span>
+        <footer className="mt-20 pt-8 border-t-2 text-[10px] font-bold text-slate-400 uppercase italic flex justify-between">
+          <div>CrewConnect Archive</div><div>{new Date().toLocaleString('de-DE')}</div>
         </footer>
       </div>
-
-      <style>{`
-        @media print {
-          body { background: white !important; }
-          .print-hidden { display: none !important; }
-          #print-area { padding: 0 !important; width: 100% !important; max-width: 100% !important; }
-          table { border-collapse: collapse; }
-          tr { page-break-inside: avoid; }
-        }
-      `}</style>
     </div>
   );
 };

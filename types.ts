@@ -26,9 +26,32 @@ export interface Order {
   total: number;
   paymentMethod: 'Bar' | 'Karte' | 'Gratis';
   eventName: string;
+  tax_rate: 7 | 19;
+  tax_type: 'togo' | 'onsite';
+  cancelled?: boolean;
+  cancel_reason?: string;
+  cancel_timestamp?: string;
+}
+
+export interface Tip {
+  id: string;
+  amount: number;
+  timestamp: string;
+  eventName: string;
+}
+
+export interface InventoryItem {
+  start: number;
+  current: number;
+}
+
+export interface InventoryRefill {
+  timestamp: string;
+  items: Record<string, number>;
 }
 
 export interface CashCount {
+  '100_note': number;
   '50_note': number;
   '20_note': number;
   '10_note': number;
@@ -42,7 +65,7 @@ export interface CashCount {
 }
 
 export interface ArchivedEvent {
-  id: string; // Wird nun das Format 2026-XXXX haben
+  id: string; // Format 2026-XXXX
   name: string;
   startDate: string;
   endDate: string;
@@ -50,8 +73,11 @@ export interface ArchivedEvent {
   initialBalance: number;
   totalRevenue?: number;
   orders: Order[];
+  tips?: Tip[];
   cashCount?: CashCount;
   finalDifference?: number;
+  inventory?: Record<string, InventoryItem>;
+  refills?: InventoryRefill[];
 }
 
 export interface POSSettings {
@@ -61,5 +87,9 @@ export interface POSSettings {
   activeEventStart: string | null;
   activeEventInitialBalance: number;
   passcode: string;
-  eventSequence: number; // Für das Format 2026-XXXX
+  eventSequence: number;
+  // Laufzeit-Inventar für das aktive Event
+  activeInventory?: Record<string, InventoryItem>;
+  activeRefills?: InventoryRefill[];
+  activeTips?: Tip[];
 }

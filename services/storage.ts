@@ -1,5 +1,5 @@
 
-import { Product, Order, POSSettings, ArchivedEvent } from '../types';
+import { Product, Order, POSSettings, ArchivedEvent, Tip } from '../types';
 import { INITIAL_PRODUCTS } from '../constants';
 
 const KEYS = {
@@ -25,6 +25,17 @@ export const storage = {
     const orders = storage.getOrders();
     localStorage.setItem(KEYS.ORDERS, JSON.stringify([...orders, order]));
   },
+  saveTip: (tip: Tip) => {
+    const settings = storage.getSettings();
+    const activeTips = settings.activeTips || [];
+    storage.updateSettings({ activeTips: [...activeTips, tip] });
+  },
+  updateOrder: (updatedOrder: Order) => {
+    const orders = storage.getOrders();
+    const newOrders = orders.map(o => o.id === updatedOrder.id ? updatedOrder : o);
+    localStorage.setItem(KEYS.ORDERS, JSON.stringify(newOrders));
+    window.dispatchEvent(new CustomEvent('c2-orders-changed'));
+  },
   clearOrders: () => {
     localStorage.setItem(KEYS.ORDERS, JSON.stringify([]));
   },
@@ -41,7 +52,10 @@ export const storage = {
       activeEventStart: null,
       activeEventInitialBalance: 0,
       passcode: '1234',
-      eventSequence: 1
+      eventSequence: 1,
+      activeInventory: {},
+      activeRefills: [],
+      activeTips: []
     };
     return data ? JSON.parse(data) : defaultSettings;
   },

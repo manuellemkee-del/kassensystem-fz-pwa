@@ -11,7 +11,7 @@ const POSKassensturz: React.FC = () => {
   const orders = storage.getOrders();
   
   const [counts, setCounts] = useState<CashCount>({
-    '50_note': 0, '20_note': 0, '10_note': 0, '5_note': 0,
+    '100_note': 0, '50_note': 0, '20_note': 0, '10_note': 0, '5_note': 0,
     '2_coin': 0, '1_coin': 0, '50_cent': 0, '20_cent': 0, '10_cent': 0, '5_cent': 0
   });
 
@@ -19,7 +19,7 @@ const POSKassensturz: React.FC = () => {
   const expectedTotal = settings.activeEventInitialBalance + barRevenue;
 
   const actualTotal = 
-    counts['50_note'] * 50 + counts['20_note'] * 20 + counts['10_note'] * 10 + counts['5_note'] * 5 +
+    counts['100_note'] * 100 + counts['50_note'] * 50 + counts['20_note'] * 20 + counts['10_note'] * 10 + counts['5_note'] * 5 +
     counts['2_coin'] * 2 + counts['1_coin'] * 1 + counts['50_cent'] * 0.5 + counts['20_cent'] * 0.2 + 
     counts['10_cent'] * 0.1 + counts['5_cent'] * 0.05;
 
@@ -48,6 +48,7 @@ const POSKassensturz: React.FC = () => {
       <div className="bg-white p-6 rounded-[2.5rem] border border-white/40 shadow-sm mb-8">
         <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6 px-1">GELD ZÄHLEN</h3>
         <div className="space-y-4">
+          <DenomRow label="100 € Scheine" val={counts['100_note']} onChange={v => handleUpdate('100_note', v)} />
           <DenomRow label="50 € Scheine" val={counts['50_note']} onChange={v => handleUpdate('50_note', v)} />
           <DenomRow label="20 € Scheine" val={counts['20_note']} onChange={v => handleUpdate('20_note', v)} />
           <DenomRow label="10 € Scheine" val={counts['10_note']} onChange={v => handleUpdate('10_note', v)} />
